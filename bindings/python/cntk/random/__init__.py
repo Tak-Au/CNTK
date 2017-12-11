@@ -64,7 +64,7 @@ def normal(shape, dtype=default_override_or(np.float32), mean=0.0, scale=1.0, se
         >>> z = C.random.normal((2,3), seed=98052)
         >>> z.eval(device=C.cpu()) # explicitly setting cpu because this is tested on multiple platforms; leave it unspecified in your code
         array([[ 1.803254,  0.995395, -0.631974],
-               [-1.73672 ,  0.005615, -0.340025]], dtype=float32)
+               [-1.736721,  0.005615, -0.340025]], dtype=float32)
     """
     from cntk.cntk_py import normal_random
     shape, dtype = sanitize_random_args(shape, dtype)
@@ -176,7 +176,7 @@ def normal_like(x, mean=0.0, scale=1.0, seed=auto_select, name=''):
         >>> x = C.parameter((2,3,4))
         >>> z = C.random.normal_like(x, seed=98052)
         >>> z.eval(device=C.cpu()) # explicitly setting cpu because this is tested on multiple platforms; leave it unspecified in your code
-        array([[[ 1.803254,  0.995395, -0.631974, -1.73672 ],
+        array([[[ 1.803254,  0.995395, -0.631974, -1.736721],
                 [ 0.005615, -0.340025, -0.011913, -0.236371],
                 [-1.207685, -0.495846,  0.037022, -1.220596]],
         <BLANKLINE>
