@@ -510,11 +510,38 @@ namespace CNTK
                 // (AssignValuesOf throws when source and destination matrices reside on different GPU devices).
                 // Once this bug is fixed, change to
                 // Matrix<ElementType> clonedMatrix(valueMatrix->GetNumRows(), valueMatrix->GetNumCols(), network->GetDeviceId(), valueMatrix->GetMatrixType(), valueMatrix->GetFormat());
-                Matrix<ElementType>& nodeValue = dynamic_cast<ComputationNode<ElementType>*>(&*computationNodePtr)->Value();
-                Matrix<ElementType> clonedMatrix(nodeValue.GetNumRows(), nodeValue.GetNumCols(), valueMatrix->GetDeviceId(), nodeValue.GetMatrixType(), nodeValue.GetFormat());
-                clonedMatrix.CastAssignValuesOf(*valueMatrix);
-                clonedMatrix.TransferToDeviceIfNotThere(network->GetDeviceId(), true);
-                nodeValue = std::move(clonedMatrix);
+                switch (variable.GetDataType())
+                {
+                case DataType::Float:
+                {
+                    Matrix<float>& nodeValue = dynamic_cast<ComputationNode<float>*>(&*computationNodePtr)->Value();
+                    Matrix<float> clonedMatrix(nodeValue.GetNumRows(), nodeValue.GetNumCols(), valueMatrix->GetDeviceId(), nodeValue.GetMatrixType(), nodeValue.GetFormat());
+                    clonedMatrix.CastAssignValuesOf(*valueMatrix);
+                    clonedMatrix.TransferToDeviceIfNotThere(network->GetDeviceId(), true);
+                    nodeValue = std::move(clonedMatrix);
+                    break;
+                }
+                case DataType::Double:
+                {
+                    Matrix<double>& nodeValue = dynamic_cast<ComputationNode<double>*>(&*computationNodePtr)->Value();
+                    Matrix<double> clonedMatrix(nodeValue.GetNumRows(), nodeValue.GetNumCols(), valueMatrix->GetDeviceId(), nodeValue.GetMatrixType(), nodeValue.GetFormat());
+                    clonedMatrix.CastAssignValuesOf(*valueMatrix);
+                    clonedMatrix.TransferToDeviceIfNotThere(network->GetDeviceId(), true);
+                    nodeValue = std::move(clonedMatrix);
+                    break;
+                }
+                case DataType::Float16:
+                {
+                    Matrix<half>& nodeValue = dynamic_cast<ComputationNode<half>*>(&*computationNodePtr)->Value();
+                    Matrix<half> clonedMatrix(nodeValue.GetNumRows(), nodeValue.GetNumCols(), valueMatrix->GetDeviceId(), nodeValue.GetMatrixType(), nodeValue.GetFormat());
+                    clonedMatrix.CastAssignValuesOf(*valueMatrix);
+                    clonedMatrix.TransferToDeviceIfNotThere(network->GetDeviceId(), true);
+                    nodeValue = std::move(clonedMatrix);
+                    break;
+                }
+                default:
+                    LogicError("Unsupported data type");
+                }
             }
         }
         else if (variable.IsInput())

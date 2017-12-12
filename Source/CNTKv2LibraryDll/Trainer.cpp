@@ -51,24 +51,19 @@ namespace CNTK
             combinedFunctionArgs = m_model->Outputs();
 
         combinedFunctionArgs.push_back(m_lossFunction);
+
+        if (m_lossFunction->Output().GetDataType() == DataType::Float16)
+            fprintf(stderr, "WARNING: using Float16 for loss function may cause overflow, please cast to float");
+
         if (!m_lossFunction->Output().DynamicAxes().empty())
         {
             m_aggregatedLossFunction = ReduceSum(lossFunction, Axis::AllAxes(), L"aggregateLoss");
-
-            // accumulate loss in float32 for output in float16
-            if (m_aggregatedLossFunction->Output().GetDataType() == DataType::Float16)
-                m_aggregatedLossFunction = Cast(m_aggregatedLossFunction, DataType::Float);
-
             combinedFunctionArgs.push_back(m_aggregatedLossFunction);
             m_trainingSampleCountVar = m_lossFunction;
         }
         else
         {
-            // accumulate loss in float32 for output in float16
-            if (m_lossFunction->Output().GetDataType() == DataType::Float16)
-                m_aggregatedLossFunction = Cast(m_lossFunction, DataType::Float);
-            else
-                m_aggregatedLossFunction = m_lossFunction;
+            m_aggregatedLossFunction = m_lossFunction;
 
             std::function<std::pair<Variable, bool>(const FunctionPtr& root)> FindTrainingSampleCountVar;
             FindTrainingSampleCountVar = [&FindTrainingSampleCountVar](const FunctionPtr& root) -> std::pair<Variable, bool> {
