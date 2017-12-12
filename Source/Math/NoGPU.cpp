@@ -2468,6 +2468,7 @@ template class GPUMatrix<half>;
 template class GPUMatrix<int>;
 template class DeviceBoundNumber<float>;
 template class DeviceBoundNumber<double>;
+template class DeviceBoundNumber<half>;
 template MatrixQuantizerGPU<float>::~MatrixQuantizerGPU();
 template MatrixQuantizerGPU<double>::~MatrixQuantizerGPU();
 template void MatrixQuantizerGPU<float>::QuantizeAsync(const Matrix<float>&, const Matrix<float>&, QuantizedMatrix<float>&, Matrix<float>&, bool);
