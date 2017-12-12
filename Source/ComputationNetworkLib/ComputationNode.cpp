@@ -18,24 +18,6 @@ namespace Microsoft { namespace MSR { namespace CNTK {
 
     using namespace std;
 
-#define SMART_NODE_INVOKE(node, func, ...)                                      \
-    if (dynamic_pointer_cast<ComputationNode<float>>(node))                     \
-        dynamic_pointer_cast<ComputationNode<float>>(node)->func(__VA_ARGS__);  \
-    else if (dynamic_pointer_cast<ComputationNode<double>>(node))               \
-        dynamic_pointer_cast<ComputationNode<double>>(node)->func(__VA_ARGS__); \
-    else if (dynamic_pointer_cast<ComputationNode<half>>(node))                 \
-        dynamic_pointer_cast<ComputationNode<half>>(node)->func(__VA_ARGS__);   \
-    else LogicError("Unknown ComputationNode type");
-
-#define SMART_NODE_INVOKE_WITH_RET(node, func, ret, ...)                              \
-    if (dynamic_pointer_cast<ComputationNode<float>>(node))                           \
-        ret = dynamic_pointer_cast<ComputationNode<float>>(node)->func(__VA_ARGS__);  \
-    else if (dynamic_pointer_cast<ComputationNode<double>>(node))                     \
-        ret = dynamic_pointer_cast<ComputationNode<double>>(node)->func(__VA_ARGS__); \
-    else if (dynamic_pointer_cast<ComputationNode<half>>(node))                       \
-        ret = dynamic_pointer_cast<ComputationNode<half>>(node)->func(__VA_ARGS__);   \
-    else LogicError("Unknown ComputationNode type");
-
 // -----------------------------------------------------------------------
 // subroutines for evaluation
 // -----------------------------------------------------------------------
@@ -118,7 +100,7 @@ void ComputationNode<ElemType>::Backprop(const FrameRange& fr, bool childrenInTh
 #if DUMPOUTPUT
             fprintf(stderr, "Backprop%d_%ls\n", i, NodeName().c_str());
 #endif
-            SMART_NODE_INVOKE(child, LazyZeroGradient, this); // set gradient to 0 if this is the first time
+            SMART_NODE_INVOKE(ComputationNode, child, LazyZeroGradient, this); // set gradient to 0 if this is the first time
 
             // If we propagate from a loop to a node that is outside the loop, we are not efficient.
             // This case is handled by SEQTraversalFlowControlNode::Backprop().
@@ -130,7 +112,7 @@ void ComputationNode<ElemType>::Backprop(const FrameRange& fr, bool childrenInTh
             }
 
             // before backprop, verify gradient optimization info
-            SMART_NODE_INVOKE(child, VerifyGradientOptimization, this);
+            SMART_NODE_INVOKE(ComputationNode, child, VerifyGradientOptimization, this);
 
             // fprintf(stderr, "BackpropTo %d %d %ls %ls\n", (int)fr.timeIdxInSeq, (int)i, NodeName().c_str(), OperationName().c_str());
             BackpropTo(i, fr); // this computes partial wrt to the child and sums the gradient value in the child
@@ -778,10 +760,10 @@ template <class ElemType>
             ComputationNodeBasePtr child = m_inputs[i];
             if (child->NeedsGradient())
             {
-                SMART_NODE_INVOKE(child, MaskMissingGradientColumnsToZero, FrameRange(child->GetMBLayout())); // HasNaN() operates on a whole matrix, so first flatten all gaps to 0
+                SMART_NODE_INVOKE(ComputationNode, child, MaskMissingGradientColumnsToZero, FrameRange(child->GetMBLayout())); // HasNaN() operates on a whole matrix, so first flatten all gaps to 0
 
                 bool hasNan = false;
-                SMART_NODE_INVOKE_WITH_RET(child, Gradient().HasNan, hasNan, "EndBackprop")
+                SMART_NODE_INVOKE_WITH_RET(ComputationNode, child, Gradient().HasNan, hasNan, "EndBackprop");
                 if (hasNan)
                 {
                     LogicError("%ls %ls operation unexpectedly produced NaN gradients on its input %ls.", NodeName().c_str(), OperationName().c_str(), child->NodeName().c_str());
